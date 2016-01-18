@@ -456,7 +456,7 @@ class ZTEVolumeDriver(driver.VolumeDriver):
             volume_size,
             zte_pub.ZTE_SNAPSHOT)
 
-    def create_export(self, context, volume):
+    def create_export(self, context, volume, connector, vg=None):
         """Exports the volume """
         pass
 
