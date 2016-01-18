@@ -89,7 +89,7 @@ class ZTEVolumeDriver(driver.VolumeDriver):
             socket.setdefaulttimeout(zte_pub.ZTE_DEFAULT_TIMEOUT)
             req = urllib.request.Request(self.url, data, headers)
             req.get_method = lambda: 'POST'
-            response = urllib.request.urlopenn(req).read()
+            response = urllib.request.urlopen(req).read()
             LOG.debug('Response Data: method %(method)s %(res)s.' %
                       {'method': method, 'res': response})
         except Exception as err:
@@ -456,7 +456,7 @@ class ZTEVolumeDriver(driver.VolumeDriver):
             volume_size,
             zte_pub.ZTE_SNAPSHOT)
 
-    def create_export(self, context, volume):
+    def create_export(self, context, volume, connector, vg=None):
         """Exports the volume """
         pass
 
