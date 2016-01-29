@@ -387,7 +387,7 @@ class ZTEVolumeDriver(driver.VolumeDriver):
         self._extend_volume(volume_name, size_increase)
 
     def _cloned_volume(self, cloned_name, src_name, vol_size, vol_type):
-        self._delete_clone_relation_by_volname(src_name, False)
+        #self._delete_clone_relation_by_volname(src_name, False)
         self._create_volume(cloned_name, vol_size)
 
         cvol_paras = {
@@ -426,11 +426,19 @@ class ZTEVolumeDriver(driver.VolumeDriver):
                 zte_pub.ZTE_SIZE *
                 zte_pub.ZTE_SIZE)
 
-        self._cloned_volume(
-            cvol_name,
-            bvol_name,
-            volume_size,
-            zte_pub.ZTE_VOLUME)
+        try:
+            self._cloned_volume(
+                cvol_name,
+                bvol_name,
+                volume_size,
+                zte_pub.ZTE_VOLUME)
+        except Exception as err:
+            self._delete_clone_relation_by_volname(bvol_name, False)
+            self._cloned_volume(
+                cvol_name,
+                bvol_name,
+                volume_size,
+                zte_pub.ZTE_VOLUME)
 
     def create_volume_from_snapshot(self, volume, snapshot):
         """create  volume from  snapshot """
@@ -450,11 +458,19 @@ class ZTEVolumeDriver(driver.VolumeDriver):
                 zte_pub.ZTE_SIZE *
                 zte_pub.ZTE_SIZE)
 
-        self._cloned_volume(
-            cvol_name,
-            bvol_name,
-            volume_size,
-            zte_pub.ZTE_SNAPSHOT)
+        try:
+            self._cloned_volume(
+                cvol_name,
+                bvol_name,
+                volume_size,
+                zte_pub.ZTE_SNAPSHOT)
+        except Exception as err:
+            self._delete_clone_relation_by_volname(bvol_name, False)
+            self._cloned_volume(
+                cvol_name,
+                bvol_name,
+                volume_size,
+                zte_pub.ZTE_SNAPSHOT)
 
     def create_export(self, context, volume, connector, vg=None):
         """Exports the volume """
