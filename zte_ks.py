@@ -255,7 +255,7 @@ class ZTEVolumeDriver(driver.VolumeDriver):
 
     def _delete_volume(self, volume_name):
         vol_name = {'cVolName': volume_name}
-        ret = self._call_method('DelVol', vol_name)
+        ret = self._call_method('ForceDelVol', vol_name)
         if ret['returncode'] not in [zte_pub.ZTE_ERR_VOLUME_NOT_EXIST,
                                      zte_pub.ZTE_ERR_LUNDEV_NOT_EXIST,
                                      zte_pub.ZTE_SUCCESS]:
@@ -265,7 +265,7 @@ class ZTEVolumeDriver(driver.VolumeDriver):
                     'Return code: %(ret)s') % {'name': volume_name,
                                                'ret': ret['returncode']})
             raise exception.VolumeBackendAPIException(err_msg)
-
+                    
     def delete_volume(self, volume):
         """Delete a volume."""
         volume_name = self._translate_volume_name(volume['name'])
