@@ -255,7 +255,7 @@ class ZTEVolumeDriver(driver.VolumeDriver):
 
     def _delete_volume(self, volume_name):
         vol_name = {'cVolName': volume_name}
-        ret = self._call_method('ForceDelVol', vol_name)
+        ret = self._call_method('DelVol', vol_name)
         if ret['returncode'] not in [zte_pub.ZTE_ERR_VOLUME_NOT_EXIST,
                                      zte_pub.ZTE_ERR_LUNDEV_NOT_EXIST,
                                      zte_pub.ZTE_SUCCESS]:
