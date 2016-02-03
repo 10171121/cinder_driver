@@ -252,10 +252,20 @@ class ZTEVolumeDriver(driver.VolumeDriver):
                     'Return code: %(ret)s') % {'name': cloned_name,
                                                'ret': ret['returncode']})
             raise exception.VolumeBackendAPIException(err_msg)
-
+    
+    def _remove_volume_from_group(self,volume):
+        sid = self._get_sessionid()
+        ret = self._call_method('GetGrpNamesOfVol', {'cVolName': volume})
+        if ret['returncode'] == zte_pub.ZTE_SUCCESS:
+            group_num = int(ret['data']['sdwMapGrpNum'])
+            for index in range(0,group_num):
+                group_name = ret['data']['cMapGrpNames'][index]
+                lun_ID = ret['data']['sdwLunLocalId'][index]
+                self._map_delete_lun(lun_ID, group_name)
+                
     def _delete_volume(self, volume_name):
         vol_name = {'cVolName': volume_name}
-        ret = self._call_method('ForceDelVol', vol_name)
+        ret = self._call_method('DelVol', vol_name)
         if ret['returncode'] not in [zte_pub.ZTE_ERR_VOLUME_NOT_EXIST,
                                      zte_pub.ZTE_ERR_LUNDEV_NOT_EXIST,
                                      zte_pub.ZTE_SUCCESS]:
@@ -272,6 +282,7 @@ class ZTEVolumeDriver(driver.VolumeDriver):
         LOG.debug('delete_volume: volume name: %s.' % volume_name)
 
         self._delete_clone_relation_by_volname(volume_name, False)
+        self._remove_volume_from_group(volume_name)
         self._delete_volume(volume_name)
 
     def _delete_cvol(self, cloned_name, issnapshot):
@@ -711,7 +722,7 @@ class ZteISCSIDriver(ZTEVolumeDriver, driver.ISCSIDriver):
 
         map_group_name = self._translate_grp_name(initiator_name)
         lunid = self._get_lunid_from_vol(volume_name, map_group_name)
-        self._map_delete_lun(lunid, initiator_name)
+        self._map_delete_lun(lunid, map_group_name)
 
     def _get_iscsi_info(self):
         iscsi_info = {}
@@ -844,8 +855,7 @@ class ZteISCSIDriver(ZTEVolumeDriver, driver.ISCSIDriver):
                  'ret': ret['returncode']})
             raise exception.CinderException(err_msg)
 
-    def _map_delete_lun(self, lunid, initiator_name):
-        map_group_name = self._translate_grp_name(initiator_name)
+    def _map_delete_lun(self, lunid, map_group_name):
 
         # lunid is -1,means lun not exist,no need to delete
         if lunid != -1:
