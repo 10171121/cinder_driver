@@ -287,7 +287,7 @@ class ZTEVolumeDriver(driver.VolumeDriver):
 
     def _delete_cvol(self, cloned_name, issnapshot):
         cvol_name = {'scCvolName': cloned_name}
-        ret = self._call_method('DelCvol', cvol_name)
+        ret = self._call_method('SyncForceDelCvol', cvol_name)
         if ret['returncode'] not in [zte_pub.ZTE_ERR_CLONE_OR_SNAP_NOT_EXIST,
                                      zte_pub.ZTE_ERR_VAS_OBJECT_NOT_EXIST,
                                      zte_pub.ZTE_SUCCESS]:
