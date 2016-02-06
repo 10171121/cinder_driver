@@ -570,8 +570,7 @@ class ZTEVolumeDriver(driver.VolumeDriver):
             'cVolName': volume_name}
         ret = self._call_method('AddVolToGrp', add_vol_to_grp)
         if ret['returncode'] not in [zte_pub.ZTE_SUCCESS,
-                                     zte_pub.ZTE_VOLUME_IN_GROUP,
-                                     zte_pub.ZTE_ERR_VOL_EXISTS]:
+                                     zte_pub.ZTE_VOLUME_IN_GROUP]:
             err_msg = (
                 _(
                     '_map_lun:fail to add vol to grp. group name:%(name)s'
@@ -582,7 +581,10 @@ class ZTEVolumeDriver(driver.VolumeDriver):
                  'vol': volume_name,
                  'ret': ret['returncode']})
             raise exception.CinderException(err_msg)
-        return ret['data']['sdwLunId']
+        elif ret['returncode'] == zte_pub.ZTE_ERR_VOL_EXISTS:
+            return self._get_lunid_from_vol(volume_name, map_group_name)
+        else:
+            return ret['data']['sdwLunId']
 
     def _update_volume_group_info(self):
         pool_list = self._get_pool_list()
