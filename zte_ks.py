@@ -584,7 +584,7 @@ class ZTEVolumeDriver(driver.VolumeDriver):
         if ret['returncode'] == zte_pub.ZTE_SUCCESS:
             return ret['data']['sdwLunId']
 
-        if ret['returncode'] not in [zte_pub.ZTE_VOLUME_IN_GROUP,
+        if ret['returncode'] in [zte_pub.ZTE_VOLUME_IN_GROUP,
                                      zte_pub.ZTE_ERR_VOL_EXISTS]:
             return self._get_lunid_from_vol(volume_name, map_group_name)
 
