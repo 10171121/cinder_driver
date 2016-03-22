@@ -581,11 +581,9 @@ class ZTEVolumeDriver(driver.VolumeDriver):
             'cVolName': volume_name}
         ret = self._call_method('AddVolToGrp', add_vol_to_grp)
         
-        if ret['returncode'] == zte_pub.ZTE_SUCCESS:
-            return ret['data']['sdwLunId']
-
-        if ret['returncode'] in [zte_pub.ZTE_VOLUME_IN_GROUP,
-                                     zte_pub.ZTE_ERR_VOL_EXISTS]:
+        if ret['returncode'] in [zte_pub.ZTE_SUCCESS,
+                                 zte_pub.ZTE_VOLUME_IN_GROUP,
+                                 zte_pub.ZTE_ERR_VOL_EXISTS]:
             return self._get_lunid_from_vol(volume_name, map_group_name)
 
         err_msg = (
