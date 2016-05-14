@@ -167,7 +167,7 @@ class ZTEVolumeDriver(driver.VolumeDriver):
     def _get_pool_list(self):
         pool_info_list = []
 
-        for pool_name in self.configuration.StoragePool:
+        for pool_name in self.configuration.zteStoragePool:
             if pool_name:
                 ret = self._call_method(
                     'GetPoolInfo', {
