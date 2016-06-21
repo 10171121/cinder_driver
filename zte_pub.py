@@ -1,4 +1,4 @@
-# Copyright 2012-2016 ZTE Corporation. All rights reserved
+# Copyright 2016 ZTE Corporation. All rights reserved
 # All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -45,10 +45,11 @@ ZTE_VOLUME_TASK_NOT_FINISHED = 17436959
 ZTE_ERR_SNAP_EXIST_CLONE = 16917163
 ZTE_SESSION_EXIST = 1495
 ZTE_STATUS_OK = 1
-ZTE_SIZE = 1024
 
 ZTE_VOLUME = 0
 ZTE_SNAPSHOT = 1
+
+ZTE_LUNID_NULL = -1
 
 ZTE_VOLUME_ALLOCATION_RATIO = 20
 ZTE_VOLUME_SNAPSHOT_PERCENT = 50
