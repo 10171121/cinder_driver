@@ -79,7 +79,7 @@ class ZTEVolumeDriver(driver.VolumeDriver):
 
     def _get_md5(self, src_string):
         md5obj = hashlib.md5()
-        md5obj.update(src_string)
+        md5obj.update(src_string.encode('UTF-8'))
         md5_string = md5obj.hexdigest()
         md5_string = md5_string[0:19]
         return md5_string
@@ -485,6 +485,18 @@ class ZTEVolumeDriver(driver.VolumeDriver):
                 volume_size,
                 zte_pub.ZTE_SNAPSHOT)
 
+    def create_export(self, context, volume, connector):
+        """Exports the volume """
+        pass
+
+    def ensure_export(self, context, volume):
+        """Driver entry point to get the export info for a existing volume."""
+        pass
+
+    def remove_export(self, context, volume_id):
+        """Driver entry point to remove an export for a volume."""
+        pass
+
     def get_volume_stats(self, refresh=False):
         """Get volume status."""
         if refresh:
@@ -620,6 +632,9 @@ class ZTEVolumeDriver(driver.VolumeDriver):
             'QoS_support': False}
 
         self._stats = data
+
+    def _create_group(self, initiator_name, map_group_name):
+        pass
 
     def _map_delete_host(self, map_group_name):
         pass
