@@ -42,26 +42,42 @@ zte_opts = [
     cfg.IPOpt('zteControllerIP1', default=None,
               help='Slave controller IP.'),
     cfg.IPOpt('zteLocalIP', default=None, help='Local IP.'),
-    cfg.StrOpt('zteUserName', default='', help='User name.'),
-    cfg.StrOpt('zteUserPassword', default='', secret=True,
+    cfg.StrOpt('zteUserName', default=None, help='User name.'),
+    cfg.StrOpt('zteUserPassword', default=None, secret=True,
                help='User password.'),
-    cfg.IntOpt('zteChunkSize', default=4, help='Virtual block size of pool.'),
+    cfg.IntOpt('zteChunkSize', default=4,
+               help='Virtual block size of pool. '
+                    'Unit : KB. '
+                    'Valid value :  4,  8, 16, 32, 64, 128, 256, 512. '),
     cfg.IntOpt('zteAheadReadSize', default=8, help='Cache readahead size.'),
-    cfg.IntOpt('zteCachePolicy', default=1, help='Cache policy.'),
-    cfg.IntOpt('zteSSDCacheSwitch', default=1, help='SSD cache switch.'),
+    cfg.IntOpt('zteCachePolicy', default=1,
+               help='Cache policy. '
+                    '0, Write Back; 1, Write Through.'),
+    cfg.IntOpt('zteSSDCacheSwitch', default=1,
+               help='SSD cache switch. '
+                    '0, OFF; 1, ON.'),
     cfg.ListOpt('zteStoragePool', default=[], help='Pool name list.'),
-    cfg.IntOpt('ztePoolVolAllocPolicy', default=0,
-               help='Pool volume alloc policy.'),
+    cfg.IntOpt('ztePoolVoAllocatedPolicy', default=0,
+               help='Pool volume allocated policy. '
+                    '0, Auto; '
+                    '1, High Performance Tier First; '
+                    '2, Performance Tier First; '
+                    '3, Capacity Tier First.'),
     cfg.IntOpt('ztePoolVolMovePolicy', default=0,
-               help='Pool volume move policy.'),
+               help='Pool volume move policy.'
+                    '0, Auto; '
+                    '1, Highest Available; '
+                    '2, Lowest Available; '
+                    '3, No Relocation.'),
     cfg.IntOpt('ztePoolVolIsThin', default=False,
                help='Whether it is a thin volume.'),
-    cfg.IntOpt('ztePoolVolInitAllocedCapacity', default=0,
-               help='Pool volume init alloced Capacity.'),
+    cfg.IntOpt('ztePoolVolInitAllocatedCapacity', default=0,
+               help='Pool volume init allocated Capacity.'
+                    'Unit : KB. '),
     cfg.IntOpt('ztePoolVolAlarmThreshold', default=0,
-               help='Pool volume alarm threshold.'),
-    cfg.IntOpt('ztePoolVolAlarmStopAllocFlag', default=0,
-               help='Pool volume alarm stop alloc flag.')
+               help='Pool volume alarm threshold. [0, 100]'),
+    cfg.IntOpt('ztePoolVolAlarmStopAllocatedFlag', default=0,
+               help='Pool volume alarm stop allocated flag.')
 ]
 
 CONF = cfg.CONF
@@ -160,9 +176,18 @@ class ZTEVolumeDriver(driver.VolumeDriver):
     def check_for_setup_error(self):
 
         zteControllerIP0 = self.configuration.zteControllerIP0
-
         if zteControllerIP0 is None:
             msg = (_("Controller IP is missing for ZTE driver."))
+            raise exception.VolumeBackendAPIException(data=msg)
+
+        zteUserName = self.configuration.zteUserName
+        if zteUserName is None:
+            msg = (_("User Name is missing for ZTE driver."))
+            raise exception.VolumeBackendAPIException(data=msg)
+
+        zteUserPassword = self.configuration.zteUserPassword
+        if zteUserPassword is None:
+            msg = (_("User Password is missing for ZTE driver."))
             raise exception.VolumeBackendAPIException(data=msg)
 
     def _get_sessionid(self):
@@ -218,15 +243,15 @@ class ZTEVolumeDriver(driver.VolumeDriver):
             'sdwCtrlPrefer': 0xFFFF,
             'sdwCachePolicy': self.configuration.zteCachePolicy,
             'sdwAheadReadSize': self.configuration.zteAheadReadSize,
-            'sdwAllocPolicy': self.configuration.ztePoolVolAllocPolicy,
+            'sdwAllocPolicy': self.configuration.ztePoolVoAllocatedPolicy,
             'sdwMovePolicy': self.configuration.ztePoolVolMovePolicy,
             'udwIsThinVol': self.configuration.ztePoolVolIsThin,
             'uqwInitAllocedCapacity':
-            self.configuration.ztePoolVolInitAllocedCapacity,
+            self.configuration.ztePoolVolInitAllocatedCapacity,
             'sdwAlarmThreshold':
             self.configuration.ztePoolVolAlarmThreshold,
             'sdwAlarmStopAllocFlag':
-            self.configuration.ztePoolVolAlarmStopAllocFlag,
+            self.configuration.ztePoolVolAlarmStopAllocatedFlag,
             'dwSSDCacheSwitch': self.configuration.zteSSDCacheSwitch}
 
         ret = self._call_method('CreateVolOnPool', vol)
@@ -507,7 +532,7 @@ class ZTEVolumeDriver(driver.VolumeDriver):
     def _translate_host_name(self, host_name):
         new_name = 'host_' + six.text_type(self._get_md5(host_name))
         new_name = new_name.replace('-', 'R')
-        LOG.debug('_translate_host_name:Name in cinder: %(old)s, '
+        LOG.debug('_translate_host_name: Name in cinder: %(old)s, '
                   'new name in storage system: %(new)s.',
                   {'old': host_name, 'new': new_name})
 
@@ -518,7 +543,7 @@ class ZTEVolumeDriver(driver.VolumeDriver):
             self._get_md5(vol_name))
         new_name = new_name.replace('-', 'R')
 
-        LOG.debug('_translate_volume_name:Name in cinder: %(old)s, '
+        LOG.debug('_translate_volume_name: Name in cinder: %(old)s, '
                   'new name in storage system: %(new)s.',
                   {'old': vol_name, 'new': new_name})
 
@@ -733,7 +758,7 @@ class ZteISCSIDriver(ZTEVolumeDriver, driver.ISCSIDriver):
             iscsi_info['DefaultTargetIPs'] = self._get_net_cfg_ips()
             if not iscsi_info['DefaultTargetIPs']:
                 err_msg = _('Can not get target ip address. ')
-                raise exception.InvalidInput(reason=err_msg)
+                raise exception.VolumeBackendAPIException(err_msg)
             initiator_list = []
             iscsi_info['Initiator'] = initiator_list
 
