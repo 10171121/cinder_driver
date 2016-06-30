@@ -531,7 +531,6 @@ class ZTEVolumeDriver(driver.VolumeDriver):
 
     def _translate_host_name(self, host_name):
         new_name = 'host_' + six.text_type(self._get_md5(host_name))
-        new_name = new_name.replace('-', 'R')
         LOG.debug('_translate_host_name: Name in cinder: %(old)s, '
                   'new name in storage system: %(new)s.',
                   {'old': host_name, 'new': new_name})
