@@ -123,7 +123,8 @@ class ZTEVolumeDriver(driver.VolumeDriver):
                       {'method': method, 'res': response})
         except Exception:
             LOG.exception(_LE('Bad response from server.'))
-            raise
+            msg = (_('_call failed.'))
+            raise exception.VolumeBackendAPIException(data=msg)
         res_json = json.loads(response)
         return res_json
 
@@ -154,9 +155,11 @@ class ZTEVolumeDriver(driver.VolumeDriver):
             self.session_id = result['data']['sessionID']
             return self.session_id
         else:
-            raise exception.VolumeBackendAPIException(
+            err_msg = (
                 _('Failed to login. Return code: %(ret)s.') % {
                     'ret': result['returncode']})
+            raise exception.VolumeBackendAPIException(
+                data=err_msg)
 
     def do_setup(self, context):
         """Any initialization the volume driver does while starting."""
@@ -225,7 +228,8 @@ class ZTEVolumeDriver(driver.VolumeDriver):
                         float(free_capacitity) / units.Ki)
                     pool_info_list.append(pool_info)
         if not pool_info_list:
-            raise exception.VolumeBackendAPIException(_('No pool available.'))
+            err_msg = (_('No pool available.'))
+            raise exception.VolumeBackendAPIException(data=err_msg)
         return pool_info_list
 
     def _find_pool_to_create_volume(self):
@@ -257,18 +261,21 @@ class ZTEVolumeDriver(driver.VolumeDriver):
         ret = self._call_method('CreateVolOnPool', vol)
         if ret['returncode'] not in [zte_pub.ZTE_ERR_OBJECT_EXIST,
                                      zte_pub.ZTE_SUCCESS]:
-            raise exception.VolumeBackendAPIException(
+            err_msg = (
                 _('Create volume fail. Volume name: %(name)s. '
                   'Return code: %(ret)s.') %
                 {'name': volume_name,
                  'ret': ret['returncode']})
+            raise exception.VolumeBackendAPIException(
+                data=err_msg)
 
     def _create_volume(self, volume_name, volume_size):
         pool_name = self._find_pool_to_create_volume()
         if pool_name:
             self._create_volume_in_pool(volume_name, volume_size, pool_name)
         else:
-            raise exception.VolumeDriverException(_('No pool available.'))
+            msg = _('No pool available.')
+            raise exception.VolumeDriverException(message=msg)
 
     def create_volume(self, volume):
         """Create a new volume."""
@@ -289,7 +296,7 @@ class ZTEVolumeDriver(driver.VolumeDriver):
                          'Return code: %(ret)s.') %
                        {'name': cloned_name,
                         'ret': ret['returncode']})
-            raise exception.VolumeBackendAPIException(err_msg)
+            raise exception.VolumeBackendAPIException(data=err_msg)
 
     def _remove_volume_from_group(self, volume):
         ret = self._call_method('GetGrpNamesOfVol', {'cVolName': volume})
@@ -310,7 +317,7 @@ class ZTEVolumeDriver(driver.VolumeDriver):
                          'Return code: %(ret)s.') %
                        {'name': volume_name,
                         'ret': ret['returncode']})
-            raise exception.VolumeBackendAPIException(err_msg)
+            raise exception.VolumeBackendAPIException(data=err_msg)
 
     def delete_volume(self, volume):
         """Delete a volume."""
@@ -333,11 +340,11 @@ class ZTEVolumeDriver(driver.VolumeDriver):
                        {'name': cloned_name, 'ret': ret['returncode']})
             if ret['returncode'] == zte_pub.ZTE_VOLUME_TASK_NOT_FINISHED:
                 if issnapshot:
-                    raise exception.SnapshotIsBusy(err_msg)
+                    raise exception.SnapshotIsBusy(snapshot_name=cloned_name)
                 else:
-                    raise exception.VolumeIsBusy(err_msg)
+                    raise exception.VolumeIsBusy(volume_name=cloned_name)
             else:
-                raise exception.VolumeBackendAPIException(err_msg)
+                raise exception.VolumeBackendAPIException(data=err_msg)
         time.sleep(zte_pub.ZTE_WAIT_DELCVOL)
 
     def _delete_clone_relation_by_volname(self, volname, issnapshot):
@@ -379,7 +386,7 @@ class ZTEVolumeDriver(driver.VolumeDriver):
                        {'snapname': snapshot_name,
                         'srv': src_vol,
                         'ret': ret['returncode']})
-            raise exception.VolumeBackendAPIException(err_msg)
+            raise exception.VolumeBackendAPIException(data=err_msg)
 
     def create_snapshot(self, snapshot):
         """create a snapshot from volume"""
@@ -401,9 +408,9 @@ class ZTEVolumeDriver(driver.VolumeDriver):
                        {'snapname': snapshot_name,
                         'ret': ret['returncode']})
             if ret['returncode'] == zte_pub.ZTE_ERR_SNAP_EXIST_CLONE:
-                raise exception.SnapshotIsBusy(err_msg)
+                raise exception.SnapshotIsBusy(snapshot_name=snapshot_name)
             else:
-                raise exception.VolumeBackendAPIException(err_msg)
+                raise exception.VolumeBackendAPIException(data=err_msg)
 
     def delete_snapshot(self, snapshot):
         """delete a snapshot volume"""
@@ -421,7 +428,7 @@ class ZTEVolumeDriver(driver.VolumeDriver):
             err_msg = (_('_extend_volume:Failed to extend vol.vol name:'
                          '%(name)s with Return code: %(ret)s.') %
                        {'name': volume_name, 'ret': ret['returncode']})
-            raise exception.VolumeBackendAPIException(err_msg)
+            raise exception.VolumeBackendAPIException(data=err_msg)
 
     def extend_volume(self, volume, new_size):
         """extend volume size"""
@@ -449,7 +456,7 @@ class ZTEVolumeDriver(driver.VolumeDriver):
                          'vol name: %(name)s with Return code: %(ret)s. ') %
                        {'name': src_name,
                         'ret': ret['returncode']})
-            raise exception.VolumeBackendAPIException(err_msg)
+            raise exception.VolumeBackendAPIException(data=err_msg)
 
     def create_cloned_volume(self, volume, src_vref):
         """clone a volume"""
@@ -461,7 +468,7 @@ class ZTEVolumeDriver(driver.VolumeDriver):
                          'Src volume size: %(volume_size)s.') %
                        {'cloned_size': volume['size'],
                         'volume_size': src_vref['size']})
-            raise exception.VolumeDriverException(err_msg)
+            raise exception.VolumeDriverException(message=err_msg)
         else:
             volume_size = float(
                 volume['size'] * units.Mi)
@@ -491,7 +498,7 @@ class ZTEVolumeDriver(driver.VolumeDriver):
                   'Src volume size: %(volume_size)s.') %
                 {'cloned_size': volume['size'],
                  'volume_size': snapshot['volume_size']})
-            raise exception.VolumeDriverException(err_msg)
+            raise exception.VolumeDriverException(message=err_msg)
         else:
             volume_size = float(
                 volume['size'] * units.Mi)
@@ -539,7 +546,7 @@ class ZTEVolumeDriver(driver.VolumeDriver):
         return new_name
 
     def _translate_volume_name(self, vol_name):
-        new_name = zte_pub.ZTE_VOL__NAME_PREFIX_NEW + six.text_type(
+        new_name = zte_pub.ZTE_VOL_NAME_PREFIX_NEW + six.text_type(
             self._get_md5(vol_name))
         new_name = new_name.replace('-', 'R')
 
@@ -568,7 +575,7 @@ class ZTEVolumeDriver(driver.VolumeDriver):
                        {'name': map_group_name,
                         'vol': volume_name,
                         'ret': ret['returncode']})
-            raise exception.VolumeDriverException(err_msg)
+            raise exception.VolumeDriverException(message=err_msg)
 
     def _get_group_lunnum(self, map_group_name):
         map_grp_info = {'cMapGrpName': map_group_name}
@@ -582,7 +589,7 @@ class ZTEVolumeDriver(driver.VolumeDriver):
             err_msg = (_('_get_group_lunnum:Get group info fail. '
                          'Group name:%(name)s with Return code: %(ret)s.') %
                        {'name': map_group_name, 'ret': ret['returncode']})
-            raise exception.VolumeDriverException(err_msg)
+            raise exception.VolumeDriverException(message=err_msg)
 
     def _delete_group(self, map_group_name):
         # before delete the group, we must delete the hosts in group
@@ -595,7 +602,7 @@ class ZTEVolumeDriver(driver.VolumeDriver):
             err_msg = (_('_delete_group:Del group fail. '
                          'Group name:%(name)s with Return code: %(ret)s.') %
                        {'name': map_group_name, 'ret': ret['returncode']})
-            raise exception.VolumeDriverException(err_msg)
+            raise exception.VolumeDriverException(message=err_msg)
 
     def _map_add_lun(self, volume_name, map_group_name):
         add_vol_to_grp = {
@@ -618,7 +625,7 @@ class ZTEVolumeDriver(driver.VolumeDriver):
              'lun': 0,
              'vol': volume_name,
              'ret': ret['returncode']})
-        raise exception.VolumeDriverException(err_msg)
+        raise exception.VolumeDriverException(message=err_msg)
 
     def _update_volume_group_info(self):
         pool_list = self._get_pool_list()
@@ -635,7 +642,7 @@ class ZTEVolumeDriver(driver.VolumeDriver):
             err_msg = (_('_get_sysinfo:get sys info fail.with Return code: '
                          '%(ret)s.'),
                        {'ret': ret['returncode']})
-            raise exception.VolumeDriverException(err_msg)
+            raise exception.VolumeDriverException(message=err_msg)
 
         return ret['data']
 
@@ -681,7 +688,7 @@ class ZteISCSIDriver(ZTEVolumeDriver, driver.ISCSIDriver):
         if ret['returncode'] != zte_pub.ZTE_SUCCESS:
             err_msg = (_('get_Net_Cfg fail.with Return code: %(ret)s.') %
                        {'ret': ret['returncode']})
-            raise exception.VolumeBackendAPIException(err_msg)
+            raise exception.VolumeBackendAPIException(data=err_msg)
 
         targetips = []
         net_cfg_info = ret['data']['tSystemNetCfg']
@@ -719,7 +726,7 @@ class ZteISCSIDriver(ZTEVolumeDriver, driver.ISCSIDriver):
             msg = (_('Failed to get target ip or iqn '
                      'for initiator %(ini)s, please check config file.') %
                    {'ini': initiator_name})
-            raise exception.VolumeDriverException(reason=msg)
+            raise exception.VolumeDriverException(message=msg)
 
         map_group_name = self._translate_grp_name(initiator_name)
         lunid = self._map_lun(initiator_name, volume_name, map_group_name)
@@ -758,7 +765,7 @@ class ZteISCSIDriver(ZTEVolumeDriver, driver.ISCSIDriver):
             iscsi_info['DefaultTargetIPs'] = self._get_net_cfg_ips()
             if not iscsi_info['DefaultTargetIPs']:
                 err_msg = _('Can not get target ip address. ')
-                raise exception.VolumeBackendAPIException(err_msg)
+                raise exception.VolumeBackendAPIException(data=err_msg)
             initiator_list = []
             iscsi_info['Initiator'] = initiator_list
 
@@ -787,7 +794,7 @@ class ZteISCSIDriver(ZTEVolumeDriver, driver.ISCSIDriver):
             err_msg = (_('_get_target_ip_ctrl:get iscsi port list fail. '
                          'with Return code: %(ret)s.') %
                        {'ret': ret['returncode']})
-            raise exception.VolumeBackendAPIException(err_msg)
+            raise exception.VolumeBackendAPIException(data=err_msg)
         count = ret['data']['sdwDeviceNum']
         for index in range(0, count):
             systemnetcfg = ret['data']['tSystemNetCfg'][index]
@@ -838,7 +845,7 @@ class ZteISCSIDriver(ZTEVolumeDriver, driver.ISCSIDriver):
                     _('create host fail.host name:%(name)s '
                       'with Return code: %(ret)s.') %
                     {'name': host_name, 'ret': ret['returncode']})
-                raise exception.VolumeBackendAPIException(err_msg)
+                raise exception.VolumeBackendAPIException(data=err_msg)
 
             # If port deleted by user, add it.
             port_info = {
@@ -855,7 +862,7 @@ class ZteISCSIDriver(ZTEVolumeDriver, driver.ISCSIDriver):
                              '%(name)s  with Return code: %(ret)s.') %
                            {'name': initiator_name,
                             'ret': ret['returncode']})
-                raise exception.VolumeBackendAPIException(err_msg)
+                raise exception.VolumeBackendAPIException(data=err_msg)
 
             host_in_grp = {
                 'ucInitName': host_name,
@@ -871,13 +878,13 @@ class ZteISCSIDriver(ZTEVolumeDriver, driver.ISCSIDriver):
                            {'name': map_group_name,
                             'init': host_name,
                             'ret': ret['returncode']})
-                raise exception.VolumeBackendAPIException(err_msg)
+                raise exception.VolumeBackendAPIException(data=err_msg)
         else:
             err_msg = (_('create group fail.group name:%(name)s '
                          'with Return code: %(ret)s.') %
                        {'name': map_group_name,
                         'ret': ret['returncode']})
-            raise exception.VolumeBackendAPIException(err_msg)
+            raise exception.VolumeBackendAPIException(data=err_msg)
 
     def _map_delete_lun(self, lunid, initiator_name):
         map_group_name = self._translate_grp_name(initiator_name)
@@ -895,7 +902,7 @@ class ZteISCSIDriver(ZTEVolumeDriver, driver.ISCSIDriver):
                              'with Return code: %(ret)s.') %
                            {'name': map_group_name, 'lun': lunid,
                             'ret': ret['returncode']})
-                raise exception.VolumeBackendAPIException(err_msg)
+                raise exception.VolumeBackendAPIException(data=err_msg)
 
         # if no lun in group,then we will delete this group
         lun_num = self._get_group_lunnum(map_group_name)
@@ -910,7 +917,7 @@ class ZteISCSIDriver(ZTEVolumeDriver, driver.ISCSIDriver):
             err_msg = (_('_map_delete_host:get map group info fail. '
                          'group name:%(name)s with Return code: %(ret)s.') %
                        {'name': map_group_name, 'ret': ret['returncode']})
-            raise exception.VolumeBackendAPIException(err_msg)
+            raise exception.VolumeBackendAPIException(data=err_msg)
 
         sdwhostnum = ret['data']['sdwHostNum']
 
@@ -926,8 +933,8 @@ class ZteISCSIDriver(ZTEVolumeDriver, driver.ISCSIDriver):
                     continue
                 if ret['returncode'] not in [zte_pub.ZTE_SUCCESS,
                                              zte_pub.ZTE_ERR_HOST_NOT_EXIST]:
-                    raise exception.VolumeDriverException(
-                        _('delete host from group fail.'))
+                    msg = _('delete host from group fail.')
+                    raise exception.VolumeDriverException(message=msg)
 
                 ret = self._call_method(
                     'GetHost', {"cHostAlias": initiator_name})
@@ -937,7 +944,7 @@ class ZteISCSIDriver(ZTEVolumeDriver, driver.ISCSIDriver):
                                  '%(ret)s.') %
                                {'name': initiator_name,
                                 'ret': ret['returncode']})
-                    raise exception.VolumeBackendAPIException(err_msg)
+                    raise exception.VolumeBackendAPIException(data=err_msg)
 
                 return_data = ret['data']
                 portnum = return_data['sdwPortNum']
@@ -956,7 +963,7 @@ class ZteISCSIDriver(ZTEVolumeDriver, driver.ISCSIDriver):
                                    {'name': initiator_name,
                                     'port': port_name,
                                     'ret': ret['returncode']})
-                        raise exception.VolumeBackendAPIException(err_msg)
+                        raise exception.VolumeBackendAPIException(data=err_msg)
 
                 ret = self._call_method(
                     'DelHost', {"cHostAlias": initiator_name})
@@ -968,4 +975,4 @@ class ZteISCSIDriver(ZTEVolumeDriver, driver.ISCSIDriver):
                                  '%(ret)s') %
                                {'name': initiator_name,
                                 'ret': ret['returncode']})
-                    raise exception.VolumeBackendAPIException(err_msg)
+                    raise exception.VolumeBackendAPIException(data=err_msg)

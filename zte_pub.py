@@ -18,7 +18,7 @@ Constants used in ZTE Volume driver.
 
 ZTE_HOST_GROUP_NAME_PREFIX = 'HostGroup_'
 ZTE_VOL_AND_SNAP_NAME_PREFIX = 'OpenStack_'
-ZTE_VOL__NAME_PREFIX_NEW = 'OpenCos_'
+ZTE_VOL_NAME_PREFIX_NEW = 'OpenCos_'
 ZTE_CLONE_SUFFIX = 'c'
 ZTE_GROUP_MAX_LUN = 255
 ZTE_SUCCESS = 0
