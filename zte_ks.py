@@ -200,7 +200,7 @@ class ZTEVolumeDriver(driver.VolumeDriver):
             if ret['returncode'] == zte_pub.ZTE_SUCCESS:
                 return sid
             else:
-                LOG.info(_LI('heartbeat failed.San. Return code:'
+                LOG.info(_LI('heartbeat failed. Return code:'
                              ' %(ret)s.'),
                          {'ret': ret['returncode']})
         except Exception:
@@ -262,7 +262,7 @@ class ZTEVolumeDriver(driver.VolumeDriver):
         if ret['returncode'] not in [zte_pub.ZTE_ERR_OBJECT_EXIST,
                                      zte_pub.ZTE_SUCCESS]:
             err_msg = (
-                _('Create volume fail. Volume name: %(name)s. '
+                _('Create volume failed. Volume name: %(name)s. '
                   'Return code: %(ret)s.') %
                 {'name': volume_name,
                  'ret': ret['returncode']})
@@ -313,7 +313,7 @@ class ZTEVolumeDriver(driver.VolumeDriver):
         if ret['returncode'] not in [zte_pub.ZTE_ERR_VOLUME_NOT_EXIST,
                                      zte_pub.ZTE_ERR_LUNDEV_NOT_EXIST,
                                      zte_pub.ZTE_SUCCESS]:
-            err_msg = (_('Delete volume fail. Volume name: %(name)s.'
+            err_msg = (_('Delete volume failed. Volume name: %(name)s.'
                          'Return code: %(ret)s.') %
                        {'name': volume_name,
                         'ret': ret['returncode']})
@@ -639,7 +639,7 @@ class ZTEVolumeDriver(driver.VolumeDriver):
     def _get_sysinfo(self):
         ret = self._call_method('GetSysInfo')
         if ret['returncode'] != zte_pub.ZTE_SUCCESS:
-            err_msg = (_('_get_sysinfo:get sys info fail.with Return code: '
+            err_msg = (_('_get_sysinfo:get sys info failed. Return code: '
                          '%(ret)s.'),
                        {'ret': ret['returncode']})
             raise exception.VolumeDriverException(message=err_msg)
@@ -686,7 +686,7 @@ class ZteISCSIDriver(ZTEVolumeDriver, driver.ISCSIDriver):
     def _get_net_cfg_ips(self):
         ret = self._call_method('GetSystemNetCfg')
         if ret['returncode'] != zte_pub.ZTE_SUCCESS:
-            err_msg = (_('get_Net_Cfg fail.with Return code: %(ret)s.') %
+            err_msg = (_('get_Net_Cfg failed. Return code: %(ret)s.') %
                        {'ret': ret['returncode']})
             raise exception.VolumeBackendAPIException(data=err_msg)
 
@@ -842,7 +842,7 @@ class ZteISCSIDriver(ZTEVolumeDriver, driver.ISCSIDriver):
                                          zte_pub.ZTE_ERR_PORT_EXIST,
                                          zte_pub.ZTE_ERR_PORT_EXIST_OLD]:
                 err_msg = (
-                    _('create host fail.host name:%(name)s '
+                    _('create host failed. Host name:%(name)s '
                       'with Return code: %(ret)s.') %
                     {'name': host_name, 'ret': ret['returncode']})
                 raise exception.VolumeBackendAPIException(data=err_msg)
@@ -858,7 +858,7 @@ class ZteISCSIDriver(ZTEVolumeDriver, driver.ISCSIDriver):
             if ret['returncode'] not in [zte_pub.ZTE_SUCCESS,
                                          zte_pub.ZTE_ERR_PORT_EXIST,
                                          zte_pub.ZTE_ERR_PORT_EXIST_OLD]:
-                err_msg = (_('_create_group:add port fail.port name: '
+                err_msg = (_('_create_group:add port failed. Port name: '
                              '%(name)s  with Return code: %(ret)s.') %
                            {'name': initiator_name,
                             'ret': ret['returncode']})
@@ -872,7 +872,7 @@ class ZteISCSIDriver(ZTEVolumeDriver, driver.ISCSIDriver):
                                          zte_pub.ZTE_ERR_HOST_EXIST,
                                          zte_pub.ZTE_ERR_HOST_EXIST_OLD]:
                 self._delete_group(map_group_name)
-                err_msg = (_('_create_group:add host to group fail. '
+                err_msg = (_('_create_group:add host to group failed. '
                              'group name:%(name)s init name :%(init)s '
                              'with Return code: %(ret)s.') %
                            {'name': map_group_name,
@@ -880,7 +880,7 @@ class ZteISCSIDriver(ZTEVolumeDriver, driver.ISCSIDriver):
                             'ret': ret['returncode']})
                 raise exception.VolumeBackendAPIException(data=err_msg)
         else:
-            err_msg = (_('create group fail.group name:%(name)s '
+            err_msg = (_('create group failed. Group name:%(name)s '
                          'with Return code: %(ret)s.') %
                        {'name': map_group_name,
                         'ret': ret['returncode']})
@@ -897,7 +897,7 @@ class ZteISCSIDriver(ZTEVolumeDriver, driver.ISCSIDriver):
                 'sdwLunId': lunid}
             ret = self._call_method('DelVolFromGrp', del_vol_from_grp)
             if ret['returncode'] != zte_pub.ZTE_SUCCESS:
-                err_msg = (_('_map_lun:delete lunid from group fail. '
+                err_msg = (_('_map_lun:delete lunid from group failed. '
                              'group name:%(name)s lunid : %(lun)s '
                              'with Return code: %(ret)s.') %
                            {'name': map_group_name, 'lun': lunid,
@@ -914,7 +914,7 @@ class ZteISCSIDriver(ZTEVolumeDriver, driver.ISCSIDriver):
         map_grp_info = {'cMapGrpName': map_group_name}
         ret = self._call_method('GetMapGrpInfo', map_grp_info)
         if ret['returncode'] != zte_pub.ZTE_SUCCESS:
-            err_msg = (_('_map_delete_host:get map group info fail. '
+            err_msg = (_('_map_delete_host:get map group info failed. '
                          'group name:%(name)s with Return code: %(ret)s.') %
                        {'name': map_group_name, 'ret': ret['returncode']})
             raise exception.VolumeBackendAPIException(data=err_msg)
@@ -933,13 +933,13 @@ class ZteISCSIDriver(ZTEVolumeDriver, driver.ISCSIDriver):
                     continue
                 if ret['returncode'] not in [zte_pub.ZTE_SUCCESS,
                                              zte_pub.ZTE_ERR_HOST_NOT_EXIST]:
-                    msg = _('delete host from group fail.')
+                    msg = _('delete host from group failed. ')
                     raise exception.VolumeDriverException(message=msg)
 
                 ret = self._call_method(
                     'GetHost', {"cHostAlias": initiator_name})
                 if ret['returncode'] != zte_pub.ZTE_SUCCESS:
-                    err_msg = (_('_map_delete_host:get host info fail. '
+                    err_msg = (_('_map_delete_host:get host info failed. '
                                  'host name:%(name)s with Return code: '
                                  '%(ret)s.') %
                                {'name': initiator_name,
@@ -957,7 +957,7 @@ class ZteISCSIDriver(ZTEVolumeDriver, driver.ISCSIDriver):
 
                     ret = self._call_method('DelPortFromHost', port_host_info)
                     if ret['returncode'] != zte_pub.ZTE_SUCCESS:
-                        err_msg = (_('delete port from host fail. '
+                        err_msg = (_('delete port from host failed. '
                                      'host name:%(name)s, port name:%(port)s '
                                      'with Return code: %(ret)s.') %
                                    {'name': initiator_name,
@@ -970,7 +970,7 @@ class ZteISCSIDriver(ZTEVolumeDriver, driver.ISCSIDriver):
                 if (ret['returncode'] not
                     in [zte_pub.ZTE_SUCCESS,
                         zte_pub.ZTE_ERR_HOSTNAME_NOT_EXIST]):
-                    err_msg = (_('_map_delete_host:delete hostfail. '
+                    err_msg = (_('_map_delete_host: delete host failed. '
                                  'host name:%(name)s with Return code: '
                                  '%(ret)s') %
                                {'name': initiator_name,
