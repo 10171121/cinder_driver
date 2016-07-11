@@ -18,7 +18,6 @@ Volume driver for ZTE storage systems.
 
 import hashlib
 import json
-import time
 
 from oslo_config import cfg
 from oslo_log import log as logging
@@ -345,7 +344,6 @@ class ZTEVolumeDriver(driver.VolumeDriver):
                     raise exception.VolumeIsBusy(volume_name=cloned_name)
             else:
                 raise exception.VolumeBackendAPIException(data=err_msg)
-        time.sleep(zte_pub.ZTE_WAIT_DELCVOL)
 
     def _delete_clone_relation_by_volname(self, volname, issnapshot):
         svol_name = {'scVolName': volname}
