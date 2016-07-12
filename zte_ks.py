@@ -219,10 +219,10 @@ class ZTEVolumeDriver(driver.VolumeDriver):
                 pool_info = {'name': pool_name}
                 if ((ret['returncode'] == zte_pub.ZTE_SUCCESS) and
                         (ret['data']['sdwState'] == zte_pub.ZTE_STATUS_OK)):
-                    total_capacitity = ret['data']['qwTotalCapacity']
+                    total_capacity = ret['data']['qwTotalCapacity']
                     free_capacitity = ret['data']['qwFreeCapacity']
                     pool_info['total'] = (
-                        float(total_capacitity) / units.Ki)
+                        float(total_capacity) / units.Ki)
                     pool_info['free'] = (
                         float(free_capacitity) / units.Ki)
                     pool_info_list.append(pool_info)
@@ -391,7 +391,10 @@ class ZTEVolumeDriver(driver.VolumeDriver):
         snapshot_name = self._translate_volume_name(snapshot['name'])
         volume_name = self._translate_volume_name(snapshot['volume_name'])
         volume_size = snapshot['volume_size']
-        self._create_snapshot(snapshot_name, volume_name, volume_size, 1)
+        self._create_snapshot(snapshot_name,
+                              volume_name,
+                              volume_size,
+                              zte_pub.ZTE_SNAPSHOT_MODE_RW)
 
     def _delete_snapshot(self, snapshot_name):
         svol_name = {'scSnapName': snapshot_name}
@@ -667,6 +670,9 @@ class ZTEVolumeDriver(driver.VolumeDriver):
         pass
 
     def _map_delete_host(self, map_group_name):
+        pass
+
+    def _map_delete_lun(self, lunid, initiator_name):
         pass
 
 
